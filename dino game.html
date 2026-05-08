@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🦖 MEME DINO RUNNER - Survive The Chaos!</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Black+Ops+One&family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --bg-primary: #0a0e27;
+            --bg-secondary: #1a1f3a;
+            --neon-pink: #ff2e97;
+            --neon-cyan: #00f0ff;
+            --neon-yellow: #ffed4e;
+            --neon-green: #39ff14;
+            --text-white: #ffffff;
+            --shadow-glow: 0 0 20px currentColor;
+        }
+
+        body {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #1a0d2e 100%);
+            color: var(--text-white);
+            overflow: hidden;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        /* Animated background stars */
+        body::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(2px 2px at 20% 30%, white, transparent),
+                radial-gradient(2px 2px at 60% 70%, white, transparent),
+                radial-gradient(1px 1px at 50% 50%, white, transparent),
+                radial-gradient(1px 1px at 80% 10%, white, transparent),
+                radial-gradient(2px 2px at 90% 60%, white, transparent),
+                radial-gradient(1px 1px at 33% 80%, white, transparent);
+            background-size: 200% 200%;
+            animation: twinkle 8s ease-in-out infinite;
+            opacity: 0.5;
+            z-index: 0;
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 0.6; }
+        }
+
+        #game-container {
+            width: 100%;
+            max-width: 800px;
+            height: 400px;
+            position: relative;
+            z-index: 1;
+            background: rgba(26, 31, 58, 0.8);
+            border: 4px solid var(--neon-cyan);
+            box-shadow: 0 0 40px var(--neon-cyan), inset 0 0 20px rgba(0, 240, 255, 0.2);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.1s ease;
+        }
+
+        .screen {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .screen.hidden {
+            display: none;
+        }
+
+        /* Start Screen */
+        #start-screen {
+            background: radial-gradient(circle at 50% 50%, rgba(255, 46, 151, 0.1), transparent);
+        }
+
+        .game-title {
+            font-family: 'Black Ops One', cursive;
+            font-size: clamp(24px, 5vw, 48px);
+            color: var(--neon-pink);
+            text-shadow: var(--shadow-glow), 0 0 40px var(--neon-pink);
+            margin-bottom: 20px;
+            animation: pulse 2s ease-in-out infinite;
+            line-height: 1.3;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .subtitle {
+            font-size: clamp(10px, 2vw, 14px);
+            color: var(--neon-cyan);
+            margin-bottom: 30px;
+            opacity: 0.8;
+        }
+
+        .btn {
+            font-family: 'Press Start 2P', cursive;
+            font-size: clamp(10px, 2vw, 14px);
+            padding: 15px 30px;
+            background: linear-gradient(135deg, var(--neon-pink), var(--neon-cyan));
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            box-shadow: 0 0 20px var(--neon-pink);
+            transition: all 0.3s ease;
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 0 20px var(--neon-pink); }
+            to { box-shadow: 0 0 40px var(--neon-cyan), 0 0 60px var(--neon-pink); }
+        }
+
+        .btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 60px var(--neon-cyan);
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+        }
+
+        .controls {
+            margin-top: 20px;
+            font-size: clamp(8px, 1.5vw, 12px);
+            color: var(--neon-yellow);
+            opacity: 0.7;
+        }
+
+        /* Game Screen */
+        #game-screen {
+            background: linear-gradient(to bottom, rgba(10, 14, 39, 0.95), rgba(26, 15, 46, 0.95));
+        }
+
+        #game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* HUD */
+        .hud {
+            position: absolute;
+            top: 20px;
+            width: calc(100% - 40px);
+            display: flex;
+            justify-content: space-between;
+            padding: 0 20px;
+            font-size: clamp(10px, 2vw, 16px);
+            color: var(--neon-cyan);
+            text-shadow: 0 0 10px var(--neon-cyan);
+            z-index: 10;
+        }
+
+        .score-label {
+            color: var(--neon-yellow);
+        }
+
+        /* Meme Text Overlay */
+        #meme-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Black Ops One', cursive;
+            font-size: clamp(20px, 5vw, 48px);
+            color: var(--neon-pink);
+            text-shadow: 0 0 20px var(--neon-pink), 0 0 40px var(--neon-pink);
+            opacity: 0;
+            z-index: 20;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+
+        #meme-text.show {
+            animation: memePopup 1s ease-out forwards;
+        }
+
+        @keyframes memePopup {
+            0% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.5) rotate(-10deg);
+            }
+            50% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1.2) rotate(5deg);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(1.5) rotate(0deg);
+            }
+        }
+
+        /* Game Over Screen */
+        #gameover-screen {
+            background: radial-gradient(circle at 50% 50%, rgba(255, 46, 151, 0.2), transparent);
+        }
+
+        .gameover-title {
+            font-family: 'Black Ops One', cursive;
+            font-size: clamp(28px, 6vw, 56px);
+            color: var(--neon-pink);
+            text-shadow: var(--shadow-glow);
+            margin-bottom: 20px;
+            animation: glitch 0.5s infinite;
+        }
+
+        @keyframes glitch {
+            0%, 100% { transform: translate(0); }
+            20% { transform: translate(-2px, 2px); }
+            40% { transform: translate(2px, -2px); }
+            60% { transform: translate(-2px, -2px); }
+            80% { transform: translate(2px, 2px); }
+        }
+
+        .score-display {
+            font-size: clamp(14px, 3vw, 24px);
+            margin: 10px 0;
+            color: var(--neon-cyan);
+        }
+
+        .score-display .number {
+            color: var(--neon-yellow);
+            text-shadow: 0 0 10px var(--neon-yellow);
+        }
+
+        .highscore {
+            color: var(--neon-green);
+            margin-top: 10px;
+        }
+
+        /* Flash Effect */
+        .flash {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.5);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 15;
+        }
+
+        .flash.active {
+            animation: flashEffect 0.3s ease-out;
+        }
+
+        @keyframes flashEffect {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
+        }
+
+        /* Screen Shake */
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translate(0, 0); }
+            10%, 30%, 50%, 70%, 90% { transform: translate(-5px, 0); }
+            20%, 40%, 60%, 80% { transform: translate(5px, 0); }
+        }
+
+        /* Mobile Optimizations */
+        @media (max-width: 768px) {
+            #game-container {
+                max-width: 100%;
+                height: 60vh;
+                border-radius: 0;
+                border: none;
+            }
+
+            .game-title {
+                font-size: 24px;
+            }
+
+            .btn {
+                font-size: 10px;
+                padding: 12px 24px;
+            }
+        }
+
+        /* Loading indicator */
+        .loading {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--neon-cyan);
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <!-- Start Screen -->
+        <div id="start-screen" class="screen">
+            <div class="game-title">🦖 MEME DINO<br>RUNNER</div>
+            <div class="subtitle">Survive the chaos or become a meme</div>
+            <button class="btn" onclick="startGame()">Press Space to Start</button>
+            <div class="controls">
+                <p>🎮 SPACE / TAP to JUMP</p>
+                <p>💀 Avoid obstacles or DIE</p>
+            </div>
+        </div>
+
+        <!-- Game Screen -->
+        <div id="game-screen" class="screen hidden">
+            <div class="hud">
+                <div><span class="score-label">SCORE:</span> <span id="current-score">0</span></div>
+                <div><span class="score-label">HIGH:</span> <span id="high-score-display">0</span></div>
+            </div>
+            <canvas id="game-canvas"></canvas>
+            <div id="meme-text"></div>
+            <div class="flash" id="flash-effect"></div>
+        </div>
+
+        <!-- Game Over Screen -->
+        <div id="gameover-screen" class="screen hidden">
+            <div class="gameover-title">💀 YOU DIED 💀</div>
+            <div class="score-display">
+                Final Score: <span class="number" id="final-score">0</span>
+            </div>
+            <div class="score-display highscore">
+                🏆 High Score: <span class="number" id="final-high-score">0</span>
+            </div>
+            <button class="btn" onclick="restartGame()">Try Again (Space)</button>
+        </div>
+    </div>
+
+    <script>
+        // ========== GAME CONFIGURATION ==========
+        const CONFIG = {
+            gravity: 0.6,
+            jumpForce: -12,
+            gameSpeed: 6,
+            speedIncrease: 0.001,
+            maxSpeed: 12,
+            obstacleSpawnRate: 0.02,
+            nearMissDistance: 50,
+            player: {
+                width: 40,
+                height: 50,
+                x: 80,
+                groundY: 0
+            },
+            obstacle: {
+                minWidth: 20,
+                maxWidth: 40,
+                minHeight: 40,
+                maxHeight: 80
+            }
+        };
+
+        // ========== GAME STATE ==========
+        let canvas, ctx;
+        let gameState = 'start'; // 'start', 'playing', 'gameover'
+        let score = 0;
+        let highScore = localStorage.getItem('memeRunnerHighScore') || 0;
+        let gameSpeed = CONFIG.gameSpeed;
+        let animationId;
+
+        // Player
+        let player = {
+            x: CONFIG.player.x,
+            y: 0,
+            width: CONFIG.player.width,
+            height: CONFIG.player.height,
+            velocityY: 0,
+            isJumping: false,
+            groundY: 0
+        };
+
+        // Obstacles
+        let obstacles = [];
+        let lastObstacleTime = 0;
+
+        // Meme system
+        const MEME_TEXTS = {
+            nearMiss: ['OOOHHH 😂', 'CLOSE ONE 😱', 'SAVED 😎', 'BARELY 🔥', 'WHEW 😅'],
+            crash: ['BRO DIED 💀', 'NOOB 🤡', 'RIP 👻', 'GAME OVER 💥', 'L + RATIO 😭'],
+            milestone: ['BEAST MODE 🦾', 'LEGEND 👑', 'FIRE 🔥', 'INSANE 🤯', 'UNSTOPPABLE ⚡']
+        };
+
+        // Audio Context for meme sounds
+        let audioContext;
+
+        // ========== INITIALIZATION ==========
+        function init() {
+            canvas = document.getElementById('game-canvas');
+            ctx = canvas.getContext('2d');
+            
+            // Set canvas size
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            // Load high score
+            document.getElementById('high-score-display').textContent = highScore;
+            document.getElementById('final-high-score').textContent = highScore;
+
+            // Initialize audio context
+            audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+            // Event listeners
+            document.addEventListener('keydown', handleKeyPress);
+            canvas.addEventListener('touchstart', handleTouch);
+            canvas.addEventListener('click', handleTouch);
+        }
+
+        function resizeCanvas() {
+            const container = document.getElementById('game-container');
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+            player.groundY = canvas.height - player.height - 20;
+            if (!player.isJumping) {
+                player.y = player.groundY;
+            }
+        }
+
+        // ========== EVENT HANDLERS ==========
+        function handleKeyPress(e) {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                if (gameState === 'start') {
+                    startGame();
+                } else if (gameState === 'playing') {
+                    jump();
+                } else if (gameState === 'gameover') {
+                    restartGame();
+                }
+            }
+        }
+
+        function handleTouch(e) {
+            e.preventDefault();
+            if (gameState === 'playing') {
+                jump();
+            }
+        }
+
+        // ========== GAME FLOW ==========
+        function startGame() {
+            // Switch to game screen
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('game-screen').classList.remove('hidden');
+            document.getElementById('gameover-screen').classList.add('hidden');
+
+            // Reset game state
+            gameState = 'playing';
+            score = 0;
+            gameSpeed = CONFIG.gameSpeed;
+            obstacles = [];
+            player.y = player.groundY;
+            player.velocityY = 0;
+            player.isJumping = false;
+            lastObstacleTime = 0;
+
+            // Start game loop
+            gameLoop();
+        }
+
+        function restartGame() {
+            startGame();
+        }
+
+        function endGame() {
+            gameState = 'gameover';
+            cancelAnimationFrame(animationId);
+
+            // Screen shake effect
+            const container = document.getElementById('game-container');
+            container.classList.add('shake');
+            setTimeout(() => container.classList.remove('shake'), 500);
+
+            // Play crash sound and show meme text
+            playSound('crash');
+            showMemeText(MEME_TEXTS.crash);
+
+            // Update high score
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('memeRunnerHighScore', highScore);
+                document.getElementById('final-high-score').textContent = highScore;
+            }
+
+            // Show game over screen
+            document.getElementById('final-score').textContent = Math.floor(score);
+            setTimeout(() => {
+                document.getElementById('game-screen').classList.add('hidden');
+                document.getElementById('gameover-screen').classList.remove('hidden');
+            }, 1000);
+        }
+
+        // ========== GAME LOOP ==========
+        function gameLoop() {
+            if (gameState !== 'playing') return;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Update score
+            score += 0.1;
+            document.getElementById('current-score').textContent = Math.floor(score);
+
+            // Increase speed over time
+            gameSpeed = Math.min(CONFIG.maxSpeed, gameSpeed + CONFIG.speedIncrease);
+
+            // Check for milestones
+            if (score % 100 < 0.1 && score > 0) {
+                showMemeText(MEME_TEXTS.milestone);
+                playSound('milestone');
+            }
+
+            // Update and draw player
+            updatePlayer();
+            drawPlayer();
+
+            // Spawn obstacles
+            spawnObstacles();
+
+            // Update and draw obstacles
+            updateObstacles();
+            drawObstacles();
+
+            // Check collisions
+            checkCollisions();
+
+            // Continue loop
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // ========== PLAYER ==========
+        function jump() {
+            if (!player.isJumping) {
+                player.velocityY = CONFIG.jumpForce;
+                player.isJumping = true;
+                playSound('jump');
+            }
+        }
+
+        function updatePlayer() {
+            // Apply gravity
+            player.velocityY += CONFIG.gravity;
+            player.y += player.velocityY;
+
+            // Ground collision
+            if (player.y >= player.groundY) {
+                player.y = player.groundY;
+                player.velocityY = 0;
+                player.isJumping = false;
+            }
+        }
+
+        function drawPlayer() {
+            // Draw dino body (simplified pixel art style)
+            ctx.fillStyle = '#39ff14';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = '#39ff14';
+            
+            // Body
+            ctx.fillRect(player.x, player.y, player.width, player.height);
+            
+            // Head
+            ctx.fillRect(player.x + 10, player.y - 15, 25, 20);
+            
+            // Eye
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(player.x + 25, player.y - 10, 5, 5);
+            
+            // Legs (animated)
+            ctx.fillStyle = '#39ff14';
+            const legOffset = Math.sin(score * 0.3) * 3;
+            ctx.fillRect(player.x + 5, player.y + player.height, 8, 10 + legOffset);
+            ctx.fillRect(player.x + 27, player.y + player.height, 8, 10 - legOffset);
+            
+            ctx.shadowBlur = 0;
+        }
+
+        // ========== OBSTACLES ==========
+        function spawnObstacles() {
+            const timeSinceLastObstacle = Date.now() - lastObstacleTime;
+            
+            if (timeSinceLastObstacle > 1000 && Math.random() < CONFIG.obstacleSpawnRate * gameSpeed) {
+                const width = Math.random() * (CONFIG.obstacle.maxWidth - CONFIG.obstacle.minWidth) + CONFIG.obstacle.minWidth;
+                const height = Math.random() * (CONFIG.obstacle.maxHeight - CONFIG.obstacle.minHeight) + CONFIG.obstacle.minHeight;
+                
+                obstacles.push({
+                    x: canvas.width,
+                    y: canvas.height - height - 20,
+                    width: width,
+                    height: height,
+                    passed: false,
+                    nearMissChecked: false
+                });
+                
+                lastObstacleTime = Date.now();
+            }
+        }
+
+        function updateObstacles() {
+            obstacles.forEach(obstacle => {
+                obstacle.x -= gameSpeed;
+            });
+
+            // Remove off-screen obstacles
+            obstacles = obstacles.filter(obstacle => obstacle.x + obstacle.width > 0);
+        }
+
+        function drawObstacles() {
+            obstacles.forEach(obstacle => {
+                // Draw cactus/obstacle
+                ctx.fillStyle = '#ff2e97';
+                ctx.shadowBlur = 10;
+                ctx.shadowColor = '#ff2e97';
+                
+                // Main body
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+                
+                // Spikes
+                const spikeCount = 3;
+                const spikeWidth = obstacle.width / spikeCount;
+                ctx.fillStyle = '#ff2e97';
+                for (let i = 0; i < spikeCount; i++) {
+                    ctx.beginPath();
+                    ctx.moveTo(obstacle.x + i * spikeWidth, obstacle.y);
+                    ctx.lineTo(obstacle.x + i * spikeWidth + spikeWidth / 2, obstacle.y - 10);
+                    ctx.lineTo(obstacle.x + (i + 1) * spikeWidth, obstacle.y);
+                    ctx.fill();
+                }
+                
+                ctx.shadowBlur = 0;
+            });
+        }
+
+        // ========== COLLISION DETECTION ==========
+        function checkCollisions() {
+            obstacles.forEach(obstacle => {
+                // Check if player passed obstacle
+                if (!obstacle.passed && obstacle.x + obstacle.width < player.x) {
+                    obstacle.passed = true;
+                    score += 5;
+                }
+
+                // Check near miss
+                const distance = Math.abs((obstacle.x + obstacle.width / 2) - (player.x + player.width / 2));
+                if (!obstacle.nearMissChecked && distance < CONFIG.nearMissDistance && 
+                    player.y + player.height <= obstacle.y + 5) {
+                    obstacle.nearMissChecked = true;
+                    showMemeText(MEME_TEXTS.nearMiss);
+                    playSound('nearMiss');
+                    flashEffect();
+                }
+
+                // Check collision
+                if (player.x < obstacle.x + obstacle.width &&
+                    player.x + player.width > obstacle.x &&
+                    player.y < obstacle.y + obstacle.height &&
+                    player.y + player.height > obstacle.y) {
+                    endGame();
+                }
+            });
+        }
+
+        // ========== MEME EFFECTS ==========
+        function showMemeText(textArray) {
+            const memeText = document.getElementById('meme-text');
+            const randomText = textArray[Math.floor(Math.random() * textArray.length)];
+            
+            memeText.textContent = randomText;
+            memeText.classList.remove('show');
+            
+            // Force reflow
+            void memeText.offsetWidth;
+            
+            memeText.classList.add('show');
+            
+            setTimeout(() => {
+                memeText.classList.remove('show');
+            }, 1000);
+        }
+
+        function flashEffect() {
+            const flash = document.getElementById('flash-effect');
+            flash.classList.remove('active');
+            void flash.offsetWidth;
+            flash.classList.add('active');
+        }
+
+        // ========== AUDIO SYSTEM ==========
+        function playSound(type) {
+            if (!audioContext) return;
+
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            switch(type) {
+                case 'jump':
+                    oscillator.frequency.setValueAtTime(400, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(600, audioContext.currentTime + 0.1);
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.1);
+                    break;
+                    
+                case 'nearMiss':
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.2);
+                    break;
+                    
+                case 'crash':
+                    oscillator.type = 'sawtooth';
+                    oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(50, audioContext.currentTime + 0.5);
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    break;
+                    
+                case 'milestone':
+                    oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(800, audioContext.currentTime + 0.1);
+                    oscillator.frequency.setValueAtTime(1000, audioContext.currentTime + 0.2);
+                    gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+            }
+        }
+
+        // ========== START THE GAME ==========
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
